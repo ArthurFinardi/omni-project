@@ -12,11 +12,13 @@ public sealed class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand
 {
     private readonly ISaleRepository _repository;
     private readonly IMapper _mapper;
+    private readonly IEventPublisher _eventPublisher;
 
-    public UpdateSaleCommandHandler(ISaleRepository repository, IMapper mapper)
+    public UpdateSaleCommandHandler(ISaleRepository repository, IMapper mapper, IEventPublisher eventPublisher)
     {
         _repository = repository;
         _mapper = mapper;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<Result<SaleDto>> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
@@ -41,6 +43,7 @@ public sealed class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand
 
         sale.ReplaceItems(items);
         await _repository.UpdateAsync(sale, cancellationToken);
+        await _eventPublisher.PublishAsync(new DeveloperStore.Application.Events.SaleModifiedEvent(sale.Id, sale.SaleNumber), cancellationToken);
 
         return Result<SaleDto>.Ok(_mapper.Map<SaleDto>(sale));
     }

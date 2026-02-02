@@ -19,6 +19,7 @@ builder.Services.AddDbContext<DeveloperStore.Infra.Persistence.SalesDbContext>(o
 
 builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleRepository, DeveloperStore.Infra.Repositories.SaleRepository>();
 builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleReadRepository, DeveloperStore.Infra.Mongo.Repositories.SaleReadRepository>();
+builder.Services.AddScoped<DeveloperStore.Application.Abstractions.IEventPublisher, DeveloperStore.Api.Services.LogEventPublisher>();
 
 builder.Services.AddSingleton(sp =>
 {
