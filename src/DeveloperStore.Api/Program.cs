@@ -1,11 +1,57 @@
+using DeveloperStore.Api;
+using DeveloperStore.Application.Contracts;
+using DeveloperStore.Domain.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DeveloperStore.Application.Sales.Commands.CreateSaleCommand>());
+builder.Services.AddAutoMapper(typeof(DeveloperStore.Application.Sales.SaleMappingProfile).Assembly);
+
+builder.Services.AddDbContext<DeveloperStore.Infra.Persistence.SalesDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+
+builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleRepository, DeveloperStore.Infra.Repositories.SaleRepository>();
+builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleReadRepository, DeveloperStore.Infra.Mongo.Repositories.SaleReadRepository>();
+
+builder.Services.AddSingleton(sp =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Mongo");
+    return new MongoDB.Driver.MongoClient(connectionString);
+});
+builder.Services.AddSingleton(sp =>
+{
+    var client = sp.GetRequiredService<MongoDB.Driver.MongoClient>();
+    var databaseName = builder.Configuration.GetValue<string>("Mongo:Database");
+    return client.GetDatabase(databaseName);
+});
+
 var app = builder.Build();
+
+app.UseExceptionHandler(appBuilder =>
+{
+    appBuilder.Run(async context =>
+    {
+        var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var exception = feature?.Error;
+
+        var (type, error, detail, statusCode) = exception switch
+        {
+            DomainException domainEx => ("ValidationError", "Invalid input data", domainEx.Message, StatusCodes.Status400BadRequest),
+            _ => ("InternalError", "Unexpected error", "An unexpected error occurred.", StatusCodes.Status500InternalServerError)
+        };
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new ErrorResponse(type, error, detail));
+    });
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -16,29 +62,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+app.MapControllers();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+namespace DeveloperStore.Api;
+
+public sealed record ErrorResponse(string Type, string Error, string Detail);
