@@ -75,3 +75,47 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
+
+## Como executar
+
+1) Suba os bancos
+- PostgreSQL: `Host=localhost;Port=5432;Database=developer_store;Username=postgres;Password=postgres`
+- MongoDB: `mongodb://localhost:27017` (database `developer_store`)
+
+2) Execute a API
+```
+dotnet run --project src/DeveloperStore.Api
+```
+
+## Endpoints (Sales)
+
+Base: `/sales`
+
+- `GET /sales` (paginado)
+- `GET /sales/{id}`
+- `POST /sales`
+- `PUT /sales/{id}`
+- `DELETE /sales/{id}`
+- `POST /sales/{id}/cancel`
+- `POST /sales/{saleId}/items/{itemId}/cancel`
+
+### Paginacao, ordenacao e filtros
+
+- `_page` (default: 1)
+- `_size` (default: 10)
+- `_order` (ex: `saleDate desc, totalAmount asc`)
+
+Filtros:
+- `campo=valor` (match exato)
+- strings com `*` para match parcial (ex: `customer=Maria*`)
+- `_minCampo` / `_maxCampo` para numerico/data (ex: `_minSaleDate=2024-01-01`)
+
+### Formato de erro
+
+```json
+{
+  "type": "string",
+  "error": "string",
+  "detail": "string"
+}
+```
