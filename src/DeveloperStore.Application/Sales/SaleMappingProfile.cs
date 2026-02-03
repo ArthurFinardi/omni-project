@@ -11,6 +11,7 @@ public sealed class SaleMappingProfile : Profile
     {
         CreateMap<ExternalIdentity, ExternalIdentityDto>();
         CreateMap<SaleItem, SaleItemDto>()
+            .ForCtorParam(nameof(SaleItemDto.Quantity), opt => opt.MapFrom(src => src.Quantity.Value))
             .ForCtorParam(nameof(SaleItemDto.UnitPrice), opt => opt.MapFrom(src => src.UnitPrice.Amount))
             .ForCtorParam(nameof(SaleItemDto.DiscountRate), opt => opt.MapFrom(src => src.Discount.Rate))
             .ForCtorParam(nameof(SaleItemDto.DiscountAmount), opt => opt.MapFrom(src => src.DiscountAmount.Amount))
