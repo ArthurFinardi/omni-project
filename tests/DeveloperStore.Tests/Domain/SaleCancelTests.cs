@@ -1,3 +1,4 @@
+using System.Linq;
 using DeveloperStore.Domain.Entities;
 using DeveloperStore.Domain.ValueObjects;
 using Xunit;
@@ -6,6 +7,35 @@ namespace DeveloperStore.Tests.Domain;
 
 public sealed class SaleCancelTests
 {
+    [Fact]
+    public void Cancel_item_recalculates_total_amount()
+    {
+        var sale = new Sale(
+            "S-101",
+            DateTime.UtcNow,
+            new ExternalIdentity("cust-1", "Cliente 1"),
+            new ExternalIdentity("branch-1", "Loja 1"));
+
+        sale.AddItem(new SaleItem(
+            new ExternalIdentity("prod-1", "Produto 1"),
+            Quantity.From(4),
+            new Money(10m)));
+
+        sale.AddItem(new SaleItem(
+            new ExternalIdentity("prod-2", "Produto 2"),
+            Quantity.From(2),
+            new Money(5m)));
+
+        var totalBefore = sale.TotalAmount.Amount;
+        var itemToCancel = sale.Items.First(i => i.Product.ExternalId == "prod-2");
+
+        sale.CancelItem(itemToCancel.Id);
+
+        Assert.False(sale.IsCancelled);
+        Assert.True(itemToCancel.IsCancelled);
+        Assert.True(sale.TotalAmount.Amount < totalBefore);
+    }
+
     [Fact]
     public void Cancel_marks_items_and_total_as_zero()
     {

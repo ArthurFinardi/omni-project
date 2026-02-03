@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using DeveloperStore.Domain.Exceptions;
 using DeveloperStore.Domain.ValueObjects;
 
 namespace DeveloperStore.Domain.Entities;
@@ -28,6 +26,9 @@ public sealed class Sale
 
     public Sale(string saleNumber, DateTime saleDate, ExternalIdentity customer, ExternalIdentity branch)
     {
+        if (string.IsNullOrWhiteSpace(saleNumber))
+            throw new DomainException("SaleNumber cannot be empty.");
+
         SaleNumber = saleNumber;
         SaleDate = saleDate;
         Customer = customer;
@@ -43,6 +44,9 @@ public sealed class Sale
 
     public void UpdateDetails(string saleNumber, DateTime saleDate, ExternalIdentity customer, ExternalIdentity branch)
     {
+        if (string.IsNullOrWhiteSpace(saleNumber))
+            throw new DomainException("SaleNumber cannot be empty.");
+
         SaleNumber = saleNumber;
         SaleDate = saleDate;
         Customer = customer;
