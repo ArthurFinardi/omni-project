@@ -210,6 +210,16 @@ Uso principal:
 - Consultas de leitura com modelo denormalizado (`sales_read`)
 - Paginação, filtros e ordenação no repositório de leitura
 
+Como é alimentado hoje:
+- O read model **não é sincronizado automaticamente** a partir do PostgreSQL nesta versão.
+- A aplicação possui eventos de aplicação (ex.: `SaleCreatedEvent`), publicados via `IEventPublisher`, porém o publisher atual apenas registra logs.
+
+Como seria em produção (abordagem recomendada):
+- Publicar eventos em um broker (ex.: RabbitMQ) e manter um consumidor responsável por:
+  - Projetar eventos do domínio/aplicação em documentos MongoDB (read model)
+  - Garantir idempotência por `SaleId` e versionamento/ordem de eventos quando necessário
+  - Implementar retentativas, DLQ e observabilidade
+
 ## 10. Paginação, Ordenação, Filtros e Erros
 
 Definições seguem `.doc/general-api.md`.
@@ -250,4 +260,3 @@ root
 ├── tests/
 └── README.md
 ```
-

@@ -109,24 +109,27 @@ public sealed class SaleReadRepository : ISaleReadRepository
         FieldDefinition<SaleReadModel, string> field = fieldName;
         if (value.StartsWith('*') && value.EndsWith('*') && value.Length > 2)
         {
-            var token = value.Trim('*');
+            var token = EscapeRegex(value.Trim('*'));
             return builder.Regex(field, new MongoDB.Bson.BsonRegularExpression(token, "i"));
         }
 
         if (value.StartsWith('*'))
         {
-            var token = value.TrimStart('*');
+            var token = EscapeRegex(value.TrimStart('*'));
             return builder.Regex(field, new MongoDB.Bson.BsonRegularExpression($"{token}$", "i"));
         }
 
         if (value.EndsWith('*'))
         {
-            var token = value.TrimEnd('*');
+            var token = EscapeRegex(value.TrimEnd('*'));
             return builder.Regex(field, new MongoDB.Bson.BsonRegularExpression($"^{token}", "i"));
         }
 
         return builder.Eq(field, value);
     }
+
+    private static string EscapeRegex(string token)
+        => System.Text.RegularExpressions.Regex.Escape(token);
 
     private static SortDefinition<SaleReadModel> BuildSort(string? order)
     {
