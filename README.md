@@ -1,55 +1,23 @@
-# Developer Evaluation Project
+## Introducao do Projeto
 
-`READ CAREFULLY`
+Este projeto é um projeto de estudo, com foco em arquitetura, boas praticas e capacidade de entrega em etapas. 
 
-## Use Case
-**You are a developer on the DeveloperStore team. Now we need to implement the API prototypes.**
+Neste projeto, foram considerados os seguintes tópicos:
+- Desenvolvimento em C# e .NET 8
+- Separação de camadas e organização do projeto
+- PostgreSQL e MongoDB
+- Padrões de projeto (Mediator, Repository, CQRS e etc)
+- EF Core
+- Testes com xUnit, mocks com NSubstitute e dados com Bogus
+- AutoMapper
+- Design de API REST
+- Git Flow e commits semanticos
+- Paginação, filtros e ordenação
+- Tratamento de erros e padrão de resposta
+- Programação assíncrona
+- Performance e qualidade de código
 
-As we work with `DDD`, to reference entities from other domains, we use the `External Identities` pattern with denormalization of entity descriptions.
-
-Therefore, you will write an API (complete CRUD) that handles sales records. The API needs to be able to inform:
-
-* Sale number
-* Date when the sale was made
-* Customer
-* Total sale amount
-* Branch where the sale was made
-* Products
-* Quantities
-* Unit prices
-* Discounts
-* Total amount for each item
-* Cancelled/Not Cancelled
-
-It's not mandatory, but it would be a differential to build code for publishing events of:
-* SaleCreated
-* SaleModified
-* SaleCancelled
-* ItemCancelled
-
-If you write the code, **it's not required** to actually publish to any Message Broker. You can log a message in the application log or however you find most convenient.
-
-### Business Rules
-
-* Purchases above 4 identical items have a 10% discount
-* Purchases between 10 and 20 identical items have a 20% discount
-* It's not possible to sell above 20 identical items
-* Purchases below 4 items cannot have a discount
-
-These business rules define quantity-based discounting tiers and limitations:
-
-1. Discount Tiers:
-   - 4+ items: 10% discount
-   - 10-20 items: 20% discount
-
-2. Restrictions:
-   - Maximum limit: 20 items per product
-   - No discounts allowed for quantities below 4 items
-
-## Overview
-This section provides a high-level overview of the project and the various skills and competencies it aims to assess for developer candidates. 
-
-See [Overview](/.doc/overview.md)
+Para detalhes completos da arquitetura veja: `architecture.md`.
 
 ## Tech Stack
 This section lists the key technologies used in the project, including the backend, testing, frontend, and database components. 
@@ -75,6 +43,22 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
+
+## Arquitetura (resumo)
+
+Modelo em camadas com dependencias sempre apontando para o nucleo do dominio:
+
+- Domain: regras e entidades (puro, sem dependencias externas)
+- Application: casos de uso, comandos/queries e contratos
+- Infrastructure: persistencia e integracoes (EF Core + Mongo)
+- API: endpoints, DI e middleware
+
+Fluxo de dependencias:
+```
+API -> Application -> Domain
+API -> Infrastructure -> Application -> Domain
+Tests -> Application/Domain
+```
 
 ## Como executar
 
@@ -119,3 +103,8 @@ Filtros:
   "detail": "string"
 }
 ```
+
+## Documentacao da API
+
+- Swagger UI: `/swagger`
+- Scalar UI: `/scalar/v1`

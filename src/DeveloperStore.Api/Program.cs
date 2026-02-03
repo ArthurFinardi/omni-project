@@ -1,8 +1,9 @@
-using DeveloperStore.Api;
 using DeveloperStore.Application.Contracts;
 using DeveloperStore.Domain.Exceptions;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DeveloperStore.Application.Sales.Commands.CreateSaleCommand>());
+builder.Services.AddMediatR(typeof(DeveloperStore.Application.Sales.Commands.CreateSaleCommand).Assembly);
 builder.Services.AddAutoMapper(typeof(DeveloperStore.Application.Sales.SaleMappingProfile).Assembly);
 
 builder.Services.AddDbContext<DeveloperStore.Infra.Persistence.SalesDbContext>(options =>
@@ -59,6 +60,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "DeveloperStore API (Scalar)";
+        options.OpenApiRoutePattern = "/swagger/{documentName}/swagger.json";
+    });
 }
 
 app.UseHttpsRedirection();
@@ -66,7 +73,5 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
-
-namespace DeveloperStore.Api;
 
 public sealed record ErrorResponse(string Type, string Error, string Detail);

@@ -6,6 +6,16 @@ namespace DeveloperStore.Domain.Entities;
 
 public sealed class SaleItem
 {
+    private SaleItem()
+    {
+        Product = new ExternalIdentity(string.Empty, string.Empty);
+        Quantity = Quantity.From(1);
+        UnitPrice = Money.Zero;
+        Discount = Discount.None;
+        DiscountAmount = Money.Zero;
+        TotalAmount = Money.Zero;
+    }
+
     public Guid Id { get; private set; } = Guid.NewGuid();
     public ExternalIdentity Product { get; private set; }
     public Quantity Quantity { get; private set; }

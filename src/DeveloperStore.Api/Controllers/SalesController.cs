@@ -1,3 +1,4 @@
+using System.Linq;
 using DeveloperStore.Application.Contracts;
 using DeveloperStore.Application.Sales.Commands;
 using DeveloperStore.Application.Sales.Queries;
@@ -25,7 +26,8 @@ public sealed class SalesController : ControllerBase
     {
         var filters = Request.Query
             .Where(q => !q.Key.StartsWith("_"))
-            .ToDictionary(q => q.Key, q => q.Value.ToString());
+            .Select(q => new KeyValuePair<string, string?>(q.Key, q.Value.ToString()))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
 
         var result = await _mediator.Send(new GetSalesPagedQuery(page, size, order, filters));
         return HandleResult(result);

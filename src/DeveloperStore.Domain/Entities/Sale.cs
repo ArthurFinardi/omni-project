@@ -9,6 +9,14 @@ public sealed class Sale
 {
     private readonly List<SaleItem> _items = new();
 
+    private Sale()
+    {
+        SaleNumber = string.Empty;
+        Customer = new ExternalIdentity(string.Empty, string.Empty);
+        Branch = new ExternalIdentity(string.Empty, string.Empty);
+        TotalAmount = Money.Zero;
+    }
+
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string SaleNumber { get; private set; }
     public DateTime SaleDate { get; private set; }
