@@ -1,74 +1,100 @@
-## Introducao do Projeto
+# Developer Evaluation Project (DeveloperStore)
 
-Este projeto é um projeto de estudo, com foco em arquitetura, boas praticas e capacidade de entrega em etapas. 
+## Introdução
 
-Neste projeto, foram considerados os seguintes tópicos:
-- Desenvolvimento em C# e .NET 8
-- Separação de camadas e organização do projeto
-- PostgreSQL e MongoDB
-- Padrões de projeto (Mediator, Repository, CQRS e etc)
-- EF Core
-- Testes com xUnit, mocks com NSubstitute e dados com Bogus
-- AutoMapper
-- Design de API REST
-- Git Flow e commits semanticos
-- Paginação, filtros e ordenação
-- Tratamento de erros e padrão de resposta
-- Programação assíncrona
-- Performance e qualidade de código
+Este é um projeto de estudo e avaliação técnica, com foco em arquitetura, boas práticas, qualidade de código e capacidade de entrega incremental (commits por etapa).
 
-Para detalhes completos da arquitetura veja: `architecture.md`.
+Tecnologias e práticas utilizadas:
+- .NET 8 / C#
+- DDD e separação de camadas (Domain, Application, Infrastructure, API)
+- PostgreSQL (EF Core) e MongoDB (read model)
+- MediatR (Mediator), AutoMapper, xUnit, NSubstitute e Bogus (Faker)
+- Paginação, filtragem e ordenação em endpoints
+- Tratamento de erros padronizado
+- Documentação via Swagger e Scalar
 
-## Tech Stack
-This section lists the key technologies used in the project, including the backend, testing, frontend, and database components. 
+Documentação técnica detalhada: `architecture.md`.
 
-See [Tech Stack](/.doc/tech-stack.md)
+## Use Case
 
-## Frameworks
-This section outlines the frameworks and libraries that are leveraged in the project to enhance development productivity and maintainability. 
+Você é um desenvolvedor do time DeveloperStore e precisa implementar protótipos de API.
 
-See [Frameworks](/.doc/frameworks.md)
+Como trabalhamos com DDD, para referenciar entidades de outros domínios usamos o padrão **External Identities**, com denormalização de descrições.
 
-<!-- 
-## API Structure
-This section includes links to the detailed documentation for the different API resources:
-- [API General](./docs/general-api.md)
-- [Products API](/.doc/products-api.md)
-- [Carts API](/.doc/carts-api.md)
-- [Users API](/.doc/users-api.md)
-- [Auth API](/.doc/auth-api.md)
--->
+Portanto, este projeto implementa uma API (CRUD completo) para registros de vendas (Sales), informando:
+- Número da venda
+- Data da venda
+- Cliente (External Identity)
+- Filial (External Identity)
+- Produtos (External Identity)
+- Quantidades
+- Preços unitários
+- Descontos
+- Total por item
+- Total da venda
+- Cancelado / Não cancelado (venda e item)
 
-## Project Structure
-This section describes the overall structure and organization of the project files and directories. 
+## Eventos (diferencial)
 
-See [Project Structure](/.doc/project-structure.md)
+Não é obrigatório, mas é um diferencial publicar eventos (sem broker real; apenas log):
+- `SaleCreated`
+- `SaleModified`
+- `SaleCancelled`
+- `ItemCancelled`
+
+## Regras de Negócio (descontos)
+
+- Compras com **4 a 9** itens idênticos: **10%** de desconto
+- Compras com **10 a 20** itens idênticos: **20%** de desconto
+- Não é permitido vender **acima de 20** itens idênticos
+- Compras com **menos de 4** itens: **sem desconto**
+
+## Referências (.doc)
+
+- Overview: `.doc/overview.md`
+- Tech Stack: `.doc/tech-stack.md`
+- Frameworks: `.doc/frameworks.md`
+- Definições gerais de API: `.doc/general-api.md`
+- Estrutura do projeto: `.doc/project-structure.md`
 
 ## Arquitetura (resumo)
 
-Modelo em camadas com dependencias sempre apontando para o nucleo do dominio:
+Modelo em camadas com dependências apontando para o núcleo:
+- Domain: regras e entidades (puro, sem dependências externas)
+- Application: casos de uso (MediatR), contratos e resultados
+- Infrastructure: persistência (EF Core/PostgreSQL) e leitura (MongoDB)
+- API: endpoints, DI, middleware de erro e documentação
 
-- Domain: regras e entidades (puro, sem dependencias externas)
-- Application: casos de uso, comandos/queries e contratos
-- Infrastructure: persistencia e integracoes (EF Core + Mongo)
-- API: endpoints, DI e middleware
-
-Fluxo de dependencias:
-```
-API -> Application -> Domain
-API -> Infrastructure -> Application -> Domain
-Tests -> Application/Domain
-```
+Detalhes completos: `architecture.md`.
 
 ## Como executar
 
-1) Suba os bancos
-- PostgreSQL: `Host=localhost;Port=5432;Database=developer_store;Username=postgres;Password=postgres`
-- MongoDB: `mongodb://localhost:27017` (database `developer_store`)
+Pré-requisitos:
+- .NET SDK 8
+- PostgreSQL e MongoDB
 
-2) Execute a API
+1) Crie o banco no PostgreSQL (se necessário)
+- Database: `developer_store`
+
+2) Ajuste as connection strings
+
+Arquivo: `src/DeveloperStore.Api/appsettings.json`
+
+3) Restore e run
 ```
+dotnet restore
 dotnet run --project src/DeveloperStore.Api
+```
+
+4) Aplicar migrations (PostgreSQL)
+```
+dotnet ef migrations add Inicial --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
+dotnet ef database update --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
+```
+
+5) Rodar testes
+```
+dotnet test
 ```
 
 ## Endpoints (Sales)
@@ -83,16 +109,16 @@ Base: `/sales`
 - `POST /sales/{id}/cancel`
 - `POST /sales/{saleId}/items/{itemId}/cancel`
 
-### Paginacao, ordenacao e filtros
+### Paginação, ordenação e filtros
 
-- `_page` (default: 1)
-- `_size` (default: 10)
-- `_order` (ex: `saleDate desc, totalAmount asc`)
+- `_page` (padrão: 1)
+- `_size` (padrão: 10)
+- `_order` (ex.: `saleDate desc, totalAmount asc`)
 
 Filtros:
 - `campo=valor` (match exato)
-- strings com `*` para match parcial (ex: `customer=Maria*`)
-- `_minCampo` / `_maxCampo` para numerico/data (ex: `_minSaleDate=2024-01-01`)
+- strings com `*` para match parcial (ex.: `customer=Maria*`)
+- `_minCampo` / `_maxCampo` para numérico/data (ex.: `_minSaleDate=2024-01-01`)
 
 ### Formato de erro
 
@@ -104,7 +130,8 @@ Filtros:
 }
 ```
 
-## Documentacao da API
+## Documentação da API
 
 - Swagger UI: `/swagger`
 - Scalar UI: `/scalar/v1`
+
