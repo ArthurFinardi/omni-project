@@ -1,5 +1,3 @@
-using System.Linq;
-using DeveloperStore.Application.Contracts;
 using DeveloperStore.Application.Sales.Commands;
 using DeveloperStore.Application.Sales.Queries;
 using MediatR;
