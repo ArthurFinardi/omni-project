@@ -57,13 +57,13 @@ public sealed class SaleReadRepository : ISaleReadRepository
             switch (key)
             {
                 case "saleNumber":
-                    list.Add(ApplyStringFilter(builder, s => s.SaleNumber, value));
+                    list.Add(ApplyStringFilter(builder, nameof(SaleReadModel.SaleNumber), value));
                     break;
                 case "customer":
-                    list.Add(ApplyStringFilter(builder, s => s.CustomerDescription, value));
+                    list.Add(ApplyStringFilter(builder, nameof(SaleReadModel.CustomerDescription), value));
                     break;
                 case "branch":
-                    list.Add(ApplyStringFilter(builder, s => s.BranchDescription, value));
+                    list.Add(ApplyStringFilter(builder, nameof(SaleReadModel.BranchDescription), value));
                     break;
                 case "isCancelled":
                     if (bool.TryParse(value, out var cancelled))
@@ -103,9 +103,10 @@ public sealed class SaleReadRepository : ISaleReadRepository
 
     private static FilterDefinition<SaleReadModel> ApplyStringFilter(
         FilterDefinitionBuilder<SaleReadModel> builder,
-        System.Linq.Expressions.Expression<Func<SaleReadModel, string>> field,
+        string fieldName,
         string value)
     {
+        FieldDefinition<SaleReadModel, string> field = fieldName;
         if (value.StartsWith('*') && value.EndsWith('*') && value.Length > 2)
         {
             var token = value.Trim('*');
