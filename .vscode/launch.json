@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 1) DEBUG: roda a API e já anexa o debugger (F5)
+      "name": "Debug - DeveloperStore.Api",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/DeveloperStore.Api"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      // 2) RUN: só executa (Ctrl+F5) sem debug
+      "name": "Run - DeveloperStore.Api (sem debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--no-build",
+        "--project",
+        "src/DeveloperStore.Api"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "noDebug": true,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      // 3) ATTACH: para debugar um dotnet já rodando
+      "name": "Attach - DeveloperStore.Api",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    }
+  ]
+}
