@@ -20,7 +20,19 @@ builder.Services.AddDbContext<DeveloperStore.Infra.Persistence.SalesDbContext>(o
 
 builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleRepository, DeveloperStore.Infra.Repositories.SaleRepository>();
 builder.Services.AddScoped<DeveloperStore.Application.Abstractions.ISaleReadRepository, DeveloperStore.Infra.Mongo.Repositories.SaleReadRepository>();
-builder.Services.AddScoped<DeveloperStore.Application.Abstractions.IEventPublisher, DeveloperStore.Api.Services.LogEventPublisher>();
+
+builder.Services.Configure<DeveloperStore.Api.Services.RabbitMqOptions>(
+    builder.Configuration.GetSection(DeveloperStore.Api.Services.RabbitMqOptions.SectionName));
+
+var eventPublisherProvider = builder.Configuration.GetValue<string>("EventPublisher:Provider") ?? "Log";
+if (eventPublisherProvider.Equals("RabbitMq", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<DeveloperStore.Application.Abstractions.IEventPublisher, DeveloperStore.Api.Services.RabbitMqEventPublisher>();
+}
+else
+{
+    builder.Services.AddScoped<DeveloperStore.Application.Abstractions.IEventPublisher, DeveloperStore.Api.Services.LogEventPublisher>();
+}
 
 builder.Services.AddSingleton(sp =>
 {

@@ -8,6 +8,7 @@ using DeveloperStore.Application.Sales.Handlers;
 using DeveloperStore.Domain.Entities;
 using DeveloperStore.Domain.ValueObjects;
 using NSubstitute;
+using DeveloperStore.Tests.Fixtures;
 using Xunit;
 
 namespace DeveloperStore.Tests.Application;
@@ -22,15 +23,7 @@ public sealed class SaleHandlersTests
         var publisher = Substitute.For<IEventPublisher>();
 
         var handler = new CreateSaleCommandHandler(repo, mapper, publisher);
-        var command = new CreateSaleCommand(
-            "S-123",
-            DateTime.UtcNow,
-            new ExternalIdentityDto("cust-1", "Cliente 1"),
-            new ExternalIdentityDto("branch-1", "Loja 1"),
-            new[]
-            {
-                new SaleItemInput(new ExternalIdentityDto("prod-1", "Produto 1"), 4, 10m)
-            });
+        var command = SaleFixture.CreateValidCommand(itemQuantity: 4);
 
         var result = await handler.Handle(command, CancellationToken.None);
 

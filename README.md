@@ -42,6 +42,20 @@ Não é obrigatório, mas é um diferencial publicar eventos (sem broker real; a
 - `SaleCancelled`
 - `ItemCancelled`
 
+### Publisher por configuração (opcional)
+
+O publisher de eventos pode ser selecionado via configuração:
+- Padrão: `Log` (registra eventos no console)
+- Opcional: `RabbitMq` (simulado; não publica em broker real)
+
+Arquivo: `src/DeveloperStore.Api/appsettings.json`
+```json
+{
+  "EventPublisher": { "Provider": "Log" },
+  "RabbitMq": { "Enabled": false, "Exchange": "developer_store.events" }
+}
+```
+
 ## Regras de Negócio (descontos)
 
 - Compras com **4 a 9** itens idênticos: **10%** de desconto
@@ -81,19 +95,19 @@ Pré-requisitos:
 Arquivo: `src/DeveloperStore.Api/appsettings.json`
 
 3) Restore e run
-```
+```bash
 dotnet restore
 dotnet run --project src/DeveloperStore.Api
 ```
 
 4) Aplicar migrations (PostgreSQL)
-```
+```bash
 dotnet ef migrations add Inicial --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
 dotnet ef database update --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
 ```
 
 5) Rodar testes
-```
+```bash
 dotnet test
 ```
 
@@ -111,9 +125,12 @@ Base: `/sales`
 
 ### Paginação, ordenação e filtros
 
-- `_page` (padrão: 1)
-- `_size` (padrão: 10)
+- `_page` (padrão: 1). Validação: `_page >= 1`
+- `_size` (padrão: 10). Validação: `1 <= _size <= 100`
 - `_order` (ex.: `saleDate desc, totalAmount asc`)
+  - Campos permitidos: `saleNumber`, `saleDate`, `totalAmount`
+  - Direções permitidas: `asc`, `desc`
+  - Campo/direção inválidos: `400 ValidationError`
 
 Filtros:
 - `campo=valor` (match exato)
@@ -134,4 +151,49 @@ Filtros:
 
 - Swagger UI: `/swagger`
 - Scalar UI: `/scalar/v1`
+
+## Exemplos (request/response)
+
+### Criar venda
+
+`POST /sales`
+
+Request:
+```json
+{
+  "saleNumber": "S-100",
+  "saleDate": "2026-02-03T12:00:00Z",
+  "customer": { "externalId": "cust-1", "description": "Cliente 1" },
+  "branch": { "externalId": "branch-1", "description": "Filial 1" },
+  "items": [
+    {
+      "product": { "externalId": "prod-1", "description": "Produto 1" },
+      "quantity": 4,
+      "unitPrice": 10.0
+    }
+  ]
+}
+```
+
+### Atualizar venda
+
+`PUT /sales/{id}`
+
+Observação: o `id` da rota deve ser o mesmo do corpo.
+
+### Cancelar venda
+
+`POST /sales/{id}/cancel`
+
+### Cancelar item
+
+`POST /sales/{saleId}/items/{itemId}/cancel`
+
+### Listar vendas com paginação/ordenação/filtros
+
+Exemplos:
+- `GET /sales?_page=1&_size=10&_order="saleDate desc"`
+- `GET /sales?_page=1&_size=10&customer=Maria*`
+- `GET /sales?_page=1&_size=10&_minSaleDate=2026-02-01&_maxSaleDate=2026-02-03`
+- `GET /sales?_page=1&_size=10&_minTotalAmount=10&_maxTotalAmount=200`
 

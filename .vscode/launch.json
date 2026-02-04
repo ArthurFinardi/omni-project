@@ -6,18 +6,15 @@
       "name": "Debug - DeveloperStore.Api",
       "type": "coreclr",
       "request": "launch",
-      "program": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "src/DeveloperStore.Api"
-      ],
+      "program": "${workspaceFolder}/src/DeveloperStore.Api/bin/Debug/net8.0/DeveloperStore.Api.dll",
+      "args": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "preLaunchTask": "build"
     },
     {
       // 2) RUN: só executa (Ctrl+F5) sem debug
