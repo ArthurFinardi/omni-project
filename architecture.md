@@ -157,6 +157,20 @@ Eventos são publicados por uma abstração:
 
 Isso permite substituir futuramente por um publisher real (ex.: Rebus) sem alterar a regra de negócio.
 
+## 5.6 Decisões e trade-offs
+
+- CQRS (PostgreSQL para escrita e MongoDB para leitura):
+  - Prós: consultas de leitura mais simples/rápidas; separação de preocupações.
+  - Contras: necessidade de sincronização do read model e estratégia de consistência eventual.
+
+- Eventos publicados via log (sem broker):
+  - Prós: atende ao requisito do desafio com baixo acoplamento e baixa complexidade operacional.
+  - Contras: não há entrega assíncrona real; não há reprocessamento; não mantém read model atualizado.
+
+- External Identities (denormalização de descrições):
+  - Prós: reduz acoplamento entre domínios e evita dependência de entidades externas.
+  - Contras: descrições podem ficar desatualizadas (snapshot); atualização exige processo assíncrono.
+
 ## 6. External Identities (Identidades Externas)
 
 Para referenciar entidades de outros domínios (ex.: Customer, Branch, Product) sem acoplamento, é utilizado o padrão **External Identities**:

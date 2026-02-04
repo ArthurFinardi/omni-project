@@ -135,3 +135,72 @@ Filtros:
 - Swagger UI: `/swagger`
 - Scalar UI: `/scalar/v1`
 
+## Exemplos (request/response)
+
+### Criar venda
+
+`POST /sales`
+
+Request:
+```json
+{
+  "saleNumber": "S-100",
+  "saleDate": "2026-02-03T12:00:00Z",
+  "customer": { "externalId": "cust-1", "description": "Cliente 1" },
+  "branch": { "externalId": "branch-1", "description": "Filial 1" },
+  "items": [
+    {
+      "product": { "externalId": "prod-1", "description": "Produto 1" },
+      "quantity": 4,
+      "unitPrice": 10.0
+    }
+  ]
+}
+```
+
+Response (exemplo):
+```json
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "saleNumber": "S-100",
+  "saleDate": "2026-02-03T12:00:00Z",
+  "customer": { "externalId": "cust-1", "description": "Cliente 1" },
+  "branch": { "externalId": "branch-1", "description": "Filial 1" },
+  "totalAmount": 36.0,
+  "items": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "product": { "externalId": "prod-1", "description": "Produto 1" },
+      "quantity": 4,
+      "unitPrice": 10.0,
+      "discountRate": 0.1,
+      "discountAmount": 4.0,
+      "totalAmount": 36.0,
+      "isCancelled": false
+    }
+  ],
+  "isCancelled": false
+}
+```
+
+### Atualizar venda
+
+`PUT /sales/{id}`
+
+Observação: o `id` da rota deve ser o mesmo do corpo.
+
+### Cancelar venda
+
+`POST /sales/{id}/cancel`
+
+### Cancelar item
+
+`POST /sales/{saleId}/items/{itemId}/cancel`
+
+### Listar vendas com paginação/ordenação/filtros
+
+Exemplos:
+- `GET /sales?_page=1&_size=10&_order="saleDate desc"`
+- `GET /sales?_page=1&_size=10&customer=Maria*`
+- `GET /sales?_page=1&_size=10&_minSaleDate=2026-02-01&_maxSaleDate=2026-02-03`
+- `GET /sales?_page=1&_size=10&_minTotalAmount=10&_maxTotalAmount=200`
