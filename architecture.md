@@ -16,7 +16,7 @@ Competências e tópicos abordados:
 - Paginação, filtragem e ordenação
 - Tratamento de erros e padronização de respostas
 - Programação assíncrona
-- Observabilidade básica (logs) e eventos de domínio/aplicação
+- Observabilidade básica (logs) e eventos de aplicação
 
 ## 2. Visão Geral da Solução
 
@@ -153,11 +153,11 @@ As entidades (`Sale`, `SaleItem`) são modelos ricos, contendo comportamento de 
 
 Eventos são publicados por uma abstração:
 - Interface: `IEventPublisher`
-- Implementação: `LogEventPublisher` (log em vez de broker)
+- Implementação padrão: `LogEventPublisher` (log em vez de broker)
 
-Isso permite substituir futuramente por um publisher real (ex.: Rebus) sem alterar a regra de negócio.
+Isso permite substituir futuramente por um publisher real sem alterar a regra de negócio.
 
-## 5.6 Decisões e trade-offs
+### 5.6 Decisões e trade-offs
 
 - CQRS (PostgreSQL para escrita e MongoDB para leitura):
   - Prós: consultas de leitura mais simples/rápidas; separação de preocupações.
@@ -176,7 +176,7 @@ Isso permite substituir futuramente por um publisher real (ex.: Rebus) sem alter
 Para referenciar entidades de outros domínios (ex.: Customer, Branch, Product) sem acoplamento, é utilizado o padrão **External Identities**:
 
 - Armazena `ExternalId` (identificador externo) e `Description` (descrição denormalizada/snapshot)
-- Evita dependências diretas e “joins” com outros contextos
+- Evita dependências diretas e joins com outros contextos
 - Mantém consistência de leitura mesmo que a descrição mude no sistema de origem (é um snapshot)
 
 No domínio:
@@ -193,14 +193,11 @@ Eventos implementados:
 
 Como funciona:
 - Handlers publicam eventos via `IEventPublisher`
-- A implementação atual (`LogEventPublisher`) escreve o evento no log da aplicação
-
-Importante:
-- Não há broker configurado (por requisito). A publicação é simulada por log.
+- A implementação padrão (`LogEventPublisher`) escreve o evento no log da aplicação
 
 Extensibilidade (RabbitMQ):
 - Existe um publisher alternativo (`RabbitMqEventPublisher`) selecionável por configuração.
-- Por padrão, ele permanece desabilitado e não tenta conectar em broker, mantendo o projeto simples para execução local.
+- Ele é **simulado** (não publica em broker real) e, por padrão, permanece desabilitado.
 
 ## 8. Programação Síncrona e Assíncrona
 
@@ -210,7 +207,6 @@ Extensibilidade (RabbitMQ):
 - Assíncrona:
   - API (controllers), handlers e repositórios usam `async/await`
   - Operações de I/O (PostgreSQL/MongoDB) são assíncronas
-  - `CancellationToken` é propagado pelas chamadas de repositório/publisher quando aplicável
 
 ## 9. Persistência e Consultas
 
@@ -230,7 +226,7 @@ Uso principal:
 
 Como é alimentado hoje:
 - O read model **não é sincronizado automaticamente** a partir do PostgreSQL nesta versão.
-- A aplicação possui eventos de aplicação (ex.: `SaleCreatedEvent`), publicados via `IEventPublisher`, porém o publisher atual apenas registra logs.
+- A aplicação possui eventos de aplicação (ex.: `SaleCreatedEvent`), publicados via `IEventPublisher`, porém o publisher padrão apenas registra logs.
 
 Como seria em produção (abordagem recomendada):
 - Publicar eventos em um broker (ex.: RabbitMQ) e manter um consumidor responsável por:
@@ -243,11 +239,14 @@ Como seria em produção (abordagem recomendada):
 Definições seguem `.doc/general-api.md`.
 
 ### 10.1 Paginação
-- `_page` (padrão: 1)
-- `_size` (padrão: 10)
+- `_page` (padrão: 1). Validação: `_page >= 1`
+- `_size` (padrão: 10). Validação: `1 <= _size <= 100`
 
 ### 10.2 Ordenação
 - `_order` (ex.: `saleDate desc, totalAmount asc`)
+  - Campos permitidos: `saleNumber`, `saleDate`, `totalAmount`
+  - Direções permitidas: `asc`, `desc`
+  - Campo/direção inválidos: `400 ValidationError`
 
 ### 10.3 Filtros
 - `campo=valor`
@@ -278,3 +277,4 @@ root
 ├── tests/
 └── README.md
 ```
+

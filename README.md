@@ -46,7 +46,7 @@ Não é obrigatório, mas é um diferencial publicar eventos (sem broker real; a
 
 O publisher de eventos pode ser selecionado via configuração:
 - Padrão: `Log` (registra eventos no console)
-- Opcional: `RabbitMq` (simulado e desabilitado por padrão)
+- Opcional: `RabbitMq` (simulado; não publica em broker real)
 
 Arquivo: `src/DeveloperStore.Api/appsettings.json`
 ```json
@@ -95,19 +95,19 @@ Pré-requisitos:
 Arquivo: `src/DeveloperStore.Api/appsettings.json`
 
 3) Restore e run
-```
+```bash
 dotnet restore
 dotnet run --project src/DeveloperStore.Api
 ```
 
 4) Aplicar migrations (PostgreSQL)
-```
+```bash
 dotnet ef migrations add Inicial --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
 dotnet ef database update --project src/DeveloperStore.Infra --startup-project src/DeveloperStore.Api --context DeveloperStore.Infra.Persistence.SalesDbContext
 ```
 
 5) Rodar testes
-```
+```bash
 dotnet test
 ```
 
@@ -125,9 +125,12 @@ Base: `/sales`
 
 ### Paginação, ordenação e filtros
 
-- `_page` (padrão: 1)
-- `_size` (padrão: 10)
+- `_page` (padrão: 1). Validação: `_page >= 1`
+- `_size` (padrão: 10). Validação: `1 <= _size <= 100`
 - `_order` (ex.: `saleDate desc, totalAmount asc`)
+  - Campos permitidos: `saleNumber`, `saleDate`, `totalAmount`
+  - Direções permitidas: `asc`, `desc`
+  - Campo/direção inválidos: `400 ValidationError`
 
 Filtros:
 - `campo=valor` (match exato)
@@ -172,31 +175,6 @@ Request:
 }
 ```
 
-Response (exemplo):
-```json
-{
-  "id": "00000000-0000-0000-0000-000000000000",
-  "saleNumber": "S-100",
-  "saleDate": "2026-02-03T12:00:00Z",
-  "customer": { "externalId": "cust-1", "description": "Cliente 1" },
-  "branch": { "externalId": "branch-1", "description": "Filial 1" },
-  "totalAmount": 36.0,
-  "items": [
-    {
-      "id": "00000000-0000-0000-0000-000000000000",
-      "product": { "externalId": "prod-1", "description": "Produto 1" },
-      "quantity": 4,
-      "unitPrice": 10.0,
-      "discountRate": 0.1,
-      "discountAmount": 4.0,
-      "totalAmount": 36.0,
-      "isCancelled": false
-    }
-  ],
-  "isCancelled": false
-}
-```
-
 ### Atualizar venda
 
 `PUT /sales/{id}`
@@ -218,3 +196,4 @@ Exemplos:
 - `GET /sales?_page=1&_size=10&customer=Maria*`
 - `GET /sales?_page=1&_size=10&_minSaleDate=2026-02-01&_maxSaleDate=2026-02-03`
 - `GET /sales?_page=1&_size=10&_minTotalAmount=10&_maxTotalAmount=200`
+
