@@ -42,6 +42,20 @@ Não é obrigatório, mas é um diferencial publicar eventos (sem broker real; a
 - `SaleCancelled`
 - `ItemCancelled`
 
+### Publisher por configuração (opcional)
+
+O publisher de eventos pode ser selecionado via configuração:
+- Padrão: `Log` (registra eventos no console)
+- Opcional: `RabbitMq` (simulado e desabilitado por padrão)
+
+Arquivo: `src/DeveloperStore.Api/appsettings.json`
+```json
+{
+  "EventPublisher": { "Provider": "Log" },
+  "RabbitMq": { "Enabled": false, "Exchange": "developer_store.events" }
+}
+```
+
 ## Regras de Negócio (descontos)
 
 - Compras com **4 a 9** itens idênticos: **10%** de desconto

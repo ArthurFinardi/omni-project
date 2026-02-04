@@ -198,6 +198,10 @@ Como funciona:
 Importante:
 - Não há broker configurado (por requisito). A publicação é simulada por log.
 
+Extensibilidade (RabbitMQ):
+- Existe um publisher alternativo (`RabbitMqEventPublisher`) selecionável por configuração.
+- Por padrão, ele permanece desabilitado e não tenta conectar em broker, mantendo o projeto simples para execução local.
+
 ## 8. Programação Síncrona e Assíncrona
 
 - Síncrona:
